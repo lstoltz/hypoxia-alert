@@ -78,6 +78,7 @@ def strip_chars(dirty_string):
 def get_new_files():
     last_ran = check_log()
     reference = strip_chars(last_ran)
+    # reference = 20220702161215 ## left in for testing
     all_csv = find_csv()
     to_process = {}
     for file in all_csv:

@@ -24,13 +24,13 @@ class Alert:
     def build_email(self):
         '''Sets up the image path and location information to construct the email alert'''
         subject = 'Hypoxia Alert'
-        self.text = ('Hypoxia dectected at: %s.<br>\nFile ID: %s'
+        self.text = ('Hypoxia dectected at: %s.<br>\nFile ID: %s<br>\n*Data has not been subjected to QA/QC and should be treated as such.'
                     % (self.read_gps(), os.path.basename(self.file_name)))
+        
+        self.footer_text = 'If you wish to be removed from hypoxia alerts please contact the author (stoltzl@oregonstate.edu) '
 
         img_path = self.create_plot()
 
-        # now set it all up with appropriate headers
-        #msg = email.message.Message()
         self.msg = EmailMessage()
         self.msg.add_header('From', self.sender_email)
         self.msg.add_header('Reply-To', self.sender_email)
@@ -38,8 +38,8 @@ class Alert:
 
         attachment_cid = make_msgid()
 
-        self.msg.set_content('<b>%s</b><br/><img src="cid:%s"/><br/>' % (
-        self.text, attachment_cid[1:-1]),'html') # need to add image as HTML
+        self.msg.set_content('%s<br/><img src="cid:%s"/<br/><br>%s' % (
+        self.text, attachment_cid[1:-1], self.footer_text),'html') # need to add image as HTML
 
         with open(img_path, 'rb') as fp:
             self.msg.add_related(
@@ -66,6 +66,7 @@ class Alert:
         return gps_data
 
     def create_plot(self):
+        ''' Generates the plot for the low oxygen data file'''
         fig, ax = plt.subplots()
         color = 'tab:blue'
         
@@ -78,13 +79,8 @@ class Alert:
         ax2.set_ylabel('Temperature ($^\circ$C)', color=color2)
         ax2.plot(pd.to_datetime(self.df['ISO 8601 Time']),self.df['DO Temperature (C)'], color=color2)
         ax2.tick_params(axis='y', labelcolor=color2)
-
-        # --- added this part --
         ax.axhspan(0, 2, facecolor='0.5', alpha=0.3)
-        # ax2.axhspan(0, 1.4, facecolor='0.5', alpha=0.3)
         ax.set_ylim(0, 10)	# resetting the ylim to be based on oxygen values, not including grey bar
-        #----------
-        #         
        
         fig.tight_layout()    # misc figure formatting and date stuff
         ax.xaxis_date()
@@ -92,7 +88,7 @@ class Alert:
         ax.xaxis.set_major_formatter(myFmt)
         fig.autofmt_xdate()
 
-        Path(self.resources).mkdir(parents=True, exist_ok=True)
+        Path(self.resources).mkdir(parents=True, exist_ok=True) # save image path for use in email
         file_name = os.path.basename(self.file_name)[:-20] + ".png"
         plt.savefig(os.path.join(self.resources, file_name))
         plt.close()
