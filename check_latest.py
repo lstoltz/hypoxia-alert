@@ -42,14 +42,18 @@ def find_gps():
     return gpsFiles
 
 def check_log():
-    '''Returns the last time this script was run'''
+    '''Returns the last time this script was run, if never ran it will '''
     with open(LOG, "r") as fp:
         content = fp.readlines()
     fp.close()
     content = [x.strip() for x in content]
     if not content:
         update_log()
-        sys.exit
+        with open(LOG, "r") as fp:
+            content = fp.readlines()
+        fp.close()
+        content = [x.strip() for x in content]
+        return content.pop()
     else:
         return content.pop()
 
