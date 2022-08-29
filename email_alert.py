@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#@author Linus Stoltz
+#@breif Helper class for generating and sending the alert email
 import smtplib, os
 from email.message import EmailMessage
 from email.utils import make_msgid
@@ -16,7 +18,7 @@ class Alert:
         self.app_pass = app_pass
         self.df = dataframe
         self.gps_file = gps_file
-        self.resources = os.path.join(os.getenv("PROJECT_ROOT"), "src", "resources",)
+        self.resources = os.path.join(os.getcwd(), "src", "resources",)
         self.file_name = file
     
     def build_email(self):

@@ -17,7 +17,7 @@ from email_alert import Alert
 
 load_dotenv()
 
-LOG = os.getenv("LOG")
+LOG = 'last_ran.log'
 SRC = os.getenv("SRC")
 receiver_list = os.getenv("SENDER_LIST")
 sender_email = os.getenv("EMAIL_USER")
