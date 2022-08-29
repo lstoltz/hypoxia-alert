@@ -2,3 +2,4 @@ data/
 env/
 .env
 src/
+completed.log
