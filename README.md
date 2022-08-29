@@ -15,5 +15,5 @@ User should also create a virtual environment and install the following required
 ## How it works
 The script when ran will look at the log file for the last time the script was ran, if this is the first time being run it will generate the log file. The script will then look for all files with times after the last log entry. With the list of new files to check the script will read those data files and determine if and how many occurances of oxygen values are below 2 mg/L which is the threshold for hypoxia.
 
-If a file is new and contains hypoxic values, the script will construct an email which includes GPS location, file name, as well as a plot of the data for quick visualization. 
+If a file is new and contains hypoxic values, the script will construct an email which includes GPS location, file name, as well as a plot of the data for quick visualization. This is designed to be run via a scheduling program such as Cron or Windows Scheduler.
 
