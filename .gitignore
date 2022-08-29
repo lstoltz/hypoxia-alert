@@ -1,5 +1,12 @@
+## Ommiting things from the repo
+# data source
 data/
+#virtual environment
 env/
+# personal keys and config
 *.env
+# email alert logging and figures
 src/
 *.log
+# VSCode things
+__pycache__/
