@@ -1,9 +1,8 @@
-import smtplib, ssl, os
-from email import encoders
-from email.mime.base import MIMEBase
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import smtplib, os
+from email.message import EmailMessage
+from email.utils import make_msgid
 import matplotlib.pyplot as plt 
 import matplotlib.dates as mdates
 from pathlib import Path
@@ -21,52 +20,43 @@ class Alert:
         self.file_name = file
     
     def build_email(self):
-        # TODO: 
-        #   add inline plot to body of email
-        gps = self.read_gps()
+        '''Sets up the image path and location information to construct the email alert'''
+        subject = 'Hypoxia Alert'
+        self.text = ('Hypoxia dectected at: %s.<br>\nFile ID: %s'
+                    % (self.read_gps(), os.path.basename(self.file_name)))
+
         img_path = self.create_plot()
-        file_id = os.path.basename(self.file_name)
-        subject = "Hypoxia Alert"
-        body="""\
-            <html>
-                <head></head>
-                <body>
-                    Hypoxia potentially detected!<br>
-                    File ID: {file_id} <br>
-                    Location: {gps} <br>
-            </html>
-            """.format(gps=gps, file_id=file_id)
-        message = MIMEMultipart()
-        message["From"] = self.sender_email
-        message["To"] = ", ".join(self.receiver_list)
-        message["Subject"] = subject
 
-        message.attach(MIMEText(body, "html"))
+        # now set it all up with appropriate headers
+        #msg = email.message.Message()
+        self.msg = EmailMessage()
+        self.msg.add_header('From', self.sender_email)
+        self.msg.add_header('Reply-To', self.sender_email)
+        self.msg.add_header('Subject', subject)
 
-        self.text = message.as_string()
+        attachment_cid = make_msgid()
 
-        with open(img_path, 'rb') as f:
-            mime = MIMEImage(f.read())
-            f.close()
-            # mime.add_header('Content-Disposition', 'attachment', filename=img_path)
-            # mime.add_header('X-Attachment-Id', '0')
-            mime.add_header('Content-ID', '<0>')
-            # read attachment file content into the MIMEBase object
-            
-            
-    # encode with base64
-            # encoders.encode_base64(mime)
-    # add MIMEBase object to MIMEMultipart object
-            message.attach(mime)
+        self.msg.set_content('<b>%s</b><br/><img src="cid:%s"/><br/>' % (
+        self.text, attachment_cid[1:-1]),'html') # need to add image as HTML
+
+        with open(img_path, 'rb') as fp:
+            self.msg.add_related(
+            fp.read(), 'image','png', cid=attachment_cid)
+        fp.close()
+
     def send_email(self):
-        # Log in to server using secure context and send email
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+        '''Log in to server using secure context and send email'''
+        try:
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
             server.login(self.sender_email, self.app_pass)
-            server.sendmail(self.sender_email, self.receiver_list, self.text)
-            server.quit()
+            server.sendmail(self.sender_email, self.receiver_list, self.msg.as_string().encode('utf-8'))
+            server.close()
+        except smtplib.SMTPException as e:
+            print('SMTP error: %s' % e)
 
     def read_gps(self):
+        ''' Utility function to read the gps location'''
         with open(self.gps_file[0], 'r') as fp:
             gps_data = fp.readlines()
             gps_data = ' '.join(gps_data).strip()

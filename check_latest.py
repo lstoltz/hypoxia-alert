@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+'''
+@author Linus Stoltz
+@breif SModule for monitoring incoming dissolved oxygen data for the evidence of hypoxia
+'''
 import os
 from glob import glob
 from dotenv import load_dotenv
@@ -6,6 +12,7 @@ from pathlib import Path
 import fnmatch as fn
 import pandas as pd
 import numpy as np
+import sys
 from email_alert import Alert
 
 load_dotenv()
@@ -16,7 +23,7 @@ receiver_list = os.getenv("SENDER_LIST")
 sender_email = os.getenv("EMAIL_USER")
 app_pass = os.getenv("APP_PASS")
 
-alert_threshold = 2 # Threshold for sending the alert
+alert_threshold = 2 # Low oxygen threshold for sending the alert (mg/L)
 fle = Path(LOG) # Make file if does not exist
 fle.touch(exist_ok=True)
 
@@ -40,7 +47,11 @@ def check_log():
         content = fp.readlines()
     fp.close()
     content = [x.strip() for x in content]
-    return content.pop()
+    if not content:
+        update_log()
+        sys.exit
+    else:
+        return content.pop()
 
 def update_log():
     '''Updates the log file with the last time this alert script was run'''
@@ -51,16 +62,18 @@ def update_log():
     fp.close()
 
 def strip_chars(dirty_string):
-    chars_to_remove = "_-: "  
-    for char in chars_to_remove:
-        dirty_string = dirty_string.replace(char, '')
-    return int(dirty_string)
-
+    '''Removes characters from the file id for easier comparision to time'''
+    try:
+        chars_to_remove = "_-: "  
+        for char in chars_to_remove:
+            dirty_string = dirty_string.replace(char, '')
+        return int(dirty_string)
+    except:
+        sys.exit()
 
 def get_new_files():
     last_ran = check_log()
     reference = strip_chars(last_ran)
-    reference = 20220726100311
     all_csv = find_csv()
     to_process = {}
     for file in all_csv:
@@ -90,14 +103,17 @@ def check_files():
             gps_file_path = find_coords(file, gps_files)
             alert = Alert(receiver_list, sender_email, app_pass, df, gps_file_path, file)
             alert.build_email()
-            alert.send_email() 
+            alert.send_email()
+            
 
 def find_coords(data_file, gps_files):
     base_name = os.path.basename(data_file)[:-20]
     gps_file_path = fn.filter(gps_files, str('*'+os.path.basename(base_name)+'*'))
     return gps_file_path
 
-check_files()
-# TODO
-    # add the 
+def main():
+    check_files()
+    update_log()
+
+main()
 
