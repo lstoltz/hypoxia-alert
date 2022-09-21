@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #@author Linus Stoltz
 #@breif Helper class for generating and sending the alert email
@@ -13,7 +12,7 @@ import pandas as pd
 class Alert:
     resources = None
     def __init__(self, receiver_list, sender_email, app_pass, dataframe, gps_file, file):
-        self.receiver_list = [receiver_list]
+        self.receiver_list = receiver_list
         self.sender_email = sender_email
         self.app_pass = app_pass
         self.df = dataframe
@@ -52,7 +51,7 @@ class Alert:
             server = smtplib.SMTP('smtp.gmail.com', 587)
             server.starttls()
             server.login(self.sender_email, self.app_pass)
-            server.sendmail(self.sender_email, self.receiver_list, self.msg.as_string().encode('utf-8'))
+            server.sendmail(self.sender_email, self.receiver_list.split(','), self.msg.as_string().encode('utf-8'))
             server.close()
         except smtplib.SMTPException as e:
             print('SMTP error: %s' % e)
@@ -95,3 +94,6 @@ class Alert:
         
         self.image_path = self.resources + os.path.sep + file_name
         return self.image_path
+
+    def get_sender_list(self):
+        return self.receiver_list	  

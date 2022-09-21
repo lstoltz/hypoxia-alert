@@ -5,8 +5,8 @@ data/
 env/
 # personal keys and config
 *.env
+*.sh
 # email alert logging and figures
 src/
 *.log
-# VSCode things
 __pycache__/
