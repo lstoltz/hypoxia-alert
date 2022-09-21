@@ -1,16 +1,16 @@
-#!/usr/bin/env python
+#!/home/linus/github/hypoxia-alert/venv/bin/python
 # -*- coding: utf-8 -*-
 '''
 @author Linus Stoltz
 @breif SModule for monitoring incoming dissolved oxygen data for the evidence of hypoxia
 '''
 import os
+import pandas as pd
 from glob import glob
 from dotenv import load_dotenv
 from datetime import datetime
 from pathlib import Path
 import fnmatch as fn
-import pandas as pd
 import numpy as np
 import sys
 from email_alert import Alert
@@ -78,7 +78,7 @@ def strip_chars(dirty_string):
 def get_new_files():
     last_ran = check_log()
     reference = strip_chars(last_ran)
-    # reference = 20220702161215 ## left in for testing
+    # reference = 20220902612155 ## left in for testing
     all_csv = find_csv()
     to_process = {}
     for file in all_csv:
@@ -92,10 +92,16 @@ def get_new_files():
                     to_process.update({date_string: file})
             except:
                 continue
-    return to_process
+    if to_process == {}:
+        print("No new files, exiting program")
+        update_log()
+        sys.exit()
+    else:
+        return to_process
 
 def check_files():
     to_process = get_new_files()
+    print("processing "+str(len(to_process))+" files") 
     gps_files = find_gps()
     for file in to_process.values():
         df = pd.read_csv(file)

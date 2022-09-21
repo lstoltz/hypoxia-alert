@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #@author Linus Stoltz
 #@breif Helper class for generating and sending the alert email
@@ -95,3 +94,6 @@ class Alert:
         
         self.image_path = self.resources + os.path.sep + file_name
         return self.image_path
+
+    def get_sender_list(self):
+        return self.receiver_list	  
